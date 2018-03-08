@@ -93,14 +93,19 @@ void cmpp_pack_set_integer(void *pack, size_t offset, unsigned long long val, si
 }
 
 void cmpp_pack_get_string(void *pack, size_t offset, char *val, size_t vallen, size_t len) {
-    if (!pack || vallen < (len + 1)) {
+    if (!pack) {
         return;
     }
 
     unsigned char *ptr = (unsigned char *)pack + offset;
 
-    memcpy(val, ptr, len);
-    *(val + len + 1) = '\0';
+    if (len < vallen) {
+        memcpy(val, ptr, len);
+    } else {
+        memcpy(val, ptr, vallen - 1);
+    }
+
+    *(val + vallen - 1) = '\0';
 
     return;
 }

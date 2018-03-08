@@ -124,6 +124,11 @@ int cmpp_active_test_resp(cmpp_sock_t *sock, unsigned int sequenceId) {
         return 1;
     }
 
+    err = cmpp_send(sock, &catrp, sizeof(catrp));
+    if (err) {
+        return (err == -1) ? err : 2;
+    }
+
     return 0;
 }
 
@@ -349,18 +354,29 @@ int cmpp_deliver(cmpp_sock_t *sock, unsigned int sequenceId, unsigned long long 
 
 int cmpp_deliver_resp(cmpp_sock_t *sock, unsigned int sequenceId, unsigned long long msgId, unsigned char result) {
     int err;
-    cmpp_deliver_resp_t cdrp;
-
-    memset(&cdrp, 0, sizeof(cdrp));
-    err = cmpp_add_header((cmpp_head_t *)&cdrp, sizeof(cdrp), CMPP_DELIVER_RESP, sequenceId);
+    size_t offset;
+    cmpp_pack_t pack;
+    cmpp_head_t *head;
+    
+    memset(&pack, 0, sizeof(pack));
+    head = (cmpp_head_t *)&pack;
+    err = cmpp_add_header((cmpp_head_t *)&pack, sizeof(pack), CMPP_DELIVER_RESP, sequenceId);
     if (err) {
         return 1;
     }
 
-    cdrp.msgId = msgId;
-    cdrp.result = result;
+    offset = sizeof(cmpp_head_t);
 
-    err = cmpp_send(sock, &cdrp, sizeof(cdrp));
+    /* Msg_Id */
+    cmpp_pack_add_integer(&pack, msgId, &offset, 8);
+    
+    /* Result */
+    cmpp_pack_add_integer(&pack, result, &offset, 1);
+
+    /* Total_Length */
+    head->totalLength = htonl(offset);
+    
+    err = cmpp_send(sock, &pack, offset);
     if (err) {
         return (err == -1) ? err : 2;
     }
@@ -369,7 +385,7 @@ int cmpp_deliver_resp(cmpp_sock_t *sock, unsigned int sequenceId, unsigned long 
 }
 
 
-int cmpp_report(cmpp_sock_t *sock, unsigned int sequenceId, unsigned long long msgId, char *stat, char *submitTime, char *doneTime,
+int cmpp_report(cmpp_sock_t *sock, unsigned int sequenceId, unsigned long long msgId, char *destId, int stat, char *submitTime, char *doneTime,
                 char *destTerminalId, unsigned int smscSequence) {
 
     int err;
@@ -379,7 +395,7 @@ int cmpp_report(cmpp_sock_t *sock, unsigned int sequenceId, unsigned long long m
     
     memset(&pack, 0, sizeof(pack));
     head = (cmpp_head_t *)&pack;
-    err = cmpp_add_header(head, sizeof(cmpp_head_t), CMPP_DELIVER, cmpp_sequence());
+    err = cmpp_add_header(head, sizeof(cmpp_head_t), CMPP_DELIVER, sequenceId);
     if (err) {
         return 1;
     }
@@ -390,7 +406,7 @@ int cmpp_report(cmpp_sock_t *sock, unsigned int sequenceId, unsigned long long m
     cmpp_pack_add_integer(&pack, msgId, &offset, 8);
     
     /* Dest_Id */
-    cmpp_pack_add_string(&pack, destTerminalId, strlen(destTerminalId), &offset, 21);
+    cmpp_pack_add_string(&pack, destId, strlen(destId), &offset, 21);
     
     /* Service_Id */
     cmpp_pack_add_string(&pack, "0000000000", 10, &offset, 10);
@@ -417,7 +433,33 @@ int cmpp_report(cmpp_sock_t *sock, unsigned int sequenceId, unsigned long long m
     cmpp_pack_add_integer(&pack, msgId, &offset, 8);
     
     /* Msg_Content -> Stat */
-    cmpp_pack_add_string(&pack, stat, 7, &offset, 7);
+    char *status = "UNKNOWN";
+
+    switch (stat) {
+        case 1:
+            status = "DELIVRD";
+            break;
+        case 2:
+            status = "EXPIRED";
+            break;
+        case 3:
+            status = "DELETED";
+            break;
+        case 4:
+            status = "UNDELIV";
+            break;
+        case 5:
+            status = "ACCEPTD";
+            break;
+        case 6:
+            status = "UNKNOWN";
+            break;
+        case 7:
+            status = "REJECTD";
+            break;
+    }
+
+    cmpp_pack_add_string(&pack, status, 7, &offset, 7);
     
     /* Msg_Content -> Submit_time */
     cmpp_pack_add_string(&pack, submitTime, 10, &offset, 10);
