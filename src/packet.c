@@ -2,7 +2,6 @@
 /* 
  * China Mobile CMPP 2.0 Protocol Library
  * Copyright (C) 2017 typefo <typefo@qq.com>
- * Update: 2017-05-22
  */
 
 #include <stdio.h>
@@ -105,7 +104,7 @@ void cmpp_pack_get_string(void *pack, size_t offset, char *val, size_t vallen, s
         memcpy(val, ptr, vallen - 1);
     }
 
-    *(val + vallen - 1) = '\0';
+    *(val + (vallen - 1)) = '\0';
 
     return;
 }
