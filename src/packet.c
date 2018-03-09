@@ -105,7 +105,7 @@ void cmpp_pack_get_string(void *pack, size_t offset, char *val, size_t vallen, s
         memcpy(val, ptr, vallen - 1);
     }
 
-    *(val + vallen - 1) = '\0';
+    *(val + (vallen - 1)) = '\0';
 
     return;
 }
