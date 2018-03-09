@@ -2,7 +2,6 @@
 /* 
  * China Mobile CMPP 2.0 Protocol Library
  * Copyright (C) 2017 typefo <typefo@qq.com>
- * Update: 2017-05-06
  */
 
 #include <stdio.h>
