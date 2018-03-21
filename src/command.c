@@ -384,8 +384,8 @@ int cmpp_deliver_resp(cmpp_sock_t *sock, unsigned int sequenceId, unsigned long 
 }
 
 
-int cmpp_report(cmpp_sock_t *sock, unsigned int sequenceId, unsigned long long msgId, char *destId, int stat, char *submitTime, char *doneTime,
-                char *destTerminalId, unsigned int smscSequence) {
+int cmpp_report(cmpp_sock_t *sock, unsigned int sequenceId, unsigned long long msgId, char *destId,
+                char *stat, char *submitTime, char *doneTime, char *destTerminalId, unsigned int smscSequence) {
 
     int err;
     cmpp_pack_t pack;
@@ -432,33 +432,7 @@ int cmpp_report(cmpp_sock_t *sock, unsigned int sequenceId, unsigned long long m
     cmpp_pack_add_integer(&pack, msgId, &offset, 8);
     
     /* Msg_Content -> Stat */
-    char *status = "UNKNOWN";
-
-    switch (stat) {
-        case 1:
-            status = "DELIVRD";
-            break;
-        case 2:
-            status = "EXPIRED";
-            break;
-        case 3:
-            status = "DELETED";
-            break;
-        case 4:
-            status = "UNDELIV";
-            break;
-        case 5:
-            status = "ACCEPTD";
-            break;
-        case 6:
-            status = "UNKNOWN";
-            break;
-        case 7:
-            status = "REJECTD";
-            break;
-    }
-
-    cmpp_pack_add_string(&pack, status, 7, &offset, 7);
+    cmpp_pack_add_string(&pack, stat, strlen(stat), &offset, 7);
     
     /* Msg_Content -> Submit_time */
     cmpp_pack_add_string(&pack, submitTime, 10, &offset, 10);
