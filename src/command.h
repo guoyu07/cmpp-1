@@ -49,10 +49,10 @@ int cmpp_connect_resp(cmpp_sock_t *sock, unsigned int sequenceId, unsigned char 
 int cmpp_terminate(cmpp_sock_t *sock, unsigned int sequenceId);
 int cmpp_terminate_resp(cmpp_sock_t *sock, unsigned int sequenceId);
 int cmpp_submit(cmpp_sock_t *sock, unsigned int sequenceId, char *spid, char *spcode, char *phone,
-                char *content, int length, int msgFmt, bool delivery);
+                char *content, int length, int msgfmt, char *serverid, bool delivery);
 int cmpp_submit_resp(cmpp_sock_t *sock, unsigned int sequenceId, unsigned long long msgId, unsigned char result);
 int cmpp_deliver(cmpp_sock_t *sock, unsigned int sequenceId, unsigned long long msgId, char *spcode,
-                 char *phone, char *content, int length, int msgFmt);
+                 char *phone, char *content, int length, int msgfmt);
 int cmpp_deliver_resp(cmpp_sock_t *sock, unsigned int sequenceId, unsigned long long msgId, unsigned char result);
 int cmpp_active_test(cmpp_sock_t *sock, unsigned int sequenceId);
 int cmpp_active_test_resp(cmpp_sock_t *sock, unsigned int sequenceId);
