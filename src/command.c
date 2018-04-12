@@ -200,7 +200,9 @@ int cmpp_submit(cmpp_sock_t *sock, unsigned int sequenceId, char *spid, char *sp
     cmpp_pack_add_integer(&pack, 1, &offset, 1);
     
     /* Service_Id */
-    cmpp_pack_add_string(&pack, serverid, strlen(serverid), &offset, 10);
+    if (serverid) {
+        cmpp_pack_add_string(&pack, serverid, strlen(serverid), &offset, 10);
+    }
     
     /* Fee_User_Type */
     cmpp_pack_add_integer(&pack, 0, &offset, 1);
