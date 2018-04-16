@@ -46,7 +46,8 @@ int cmpp_connect(cmpp_sock_t *sock, unsigned int sequenceId, const char *user, c
     time(&now);
     t = localtime(&now);
     char timestamp[11] = {0};
-    sprintf(timestamp, "%02d%02d%02d%02d%02d", t->tm_mon + 1, t->tm_mday, t->tm_hour, t->tm_min, t->tm_sec);
+    sprintf(timestamp, "%02d%02d%02d%02d%02d", t->tm_mon + 1, t->tm_mday,
+            t->tm_hour, t->tm_min, t->tm_sec);
     ccp.timestamp = htonl(atoi(timestamp));
 
     /* AuthenticatorSource */
@@ -167,12 +168,14 @@ int cmpp_terminate_resp(cmpp_sock_t *sock, unsigned int sequenceId) {
     return 0;
 }
 
-int cmpp_submit(cmpp_sock_t *sock, unsigned int sequenceId, char *spid, char *spcode, char *phone, char *content, int length, int msgFmt, bool delivery) {
+int cmpp_submit(cmpp_sock_t *sock, unsigned int sequenceId, char *spid, char *spcode, char *phone,
+                char *content,int length, int msgfmt, char *serverid, bool delivery) {
     int err;
     cmpp_head_t *head;
     cmpp_pack_t pack;
     size_t offset;
-    
+
+
     memset(&pack, 0, sizeof(pack));
     head = (cmpp_head_t *)&pack;
     err = cmpp_add_header(head, sizeof(cmpp_head_t), CMPP_SUBMIT, sequenceId);
@@ -198,8 +201,12 @@ int cmpp_submit(cmpp_sock_t *sock, unsigned int sequenceId, char *spid, char *sp
     cmpp_pack_add_integer(&pack, 1, &offset, 1);
     
     /* Service_Id */
-    cmpp_pack_add_string(&pack, spcode, strlen(spcode), &offset, 10);
-    
+    if (serverid) {
+        cmpp_pack_add_string(&pack, serverid, strlen(serverid), &offset, 10);
+    } else {
+        offset += 10;
+    }
+
     /* Fee_User_Type */
     cmpp_pack_add_integer(&pack, 0, &offset, 1);
     
@@ -213,7 +220,7 @@ int cmpp_submit(cmpp_sock_t *sock, unsigned int sequenceId, char *spid, char *sp
     cmpp_pack_add_integer(&pack, 0, &offset, 1);
     
     /* Msg_Fmt */
-    cmpp_pack_add_integer(&pack, msgFmt, &offset, 1);
+    cmpp_pack_add_integer(&pack, msgfmt, &offset, 1);
     
     /* Msg_Src */
     cmpp_pack_add_string(&pack, spid, strlen(spid), &offset, 6);
@@ -291,7 +298,8 @@ int cmpp_submit_resp(cmpp_sock_t *sock, unsigned int sequenceId, unsigned long l
     return 0;
 }
 
-int cmpp_deliver(cmpp_sock_t *sock, unsigned int sequenceId, unsigned long long msgId, char *spcode, char *phone, char *content, int length, int msgFmt) {
+int cmpp_deliver(cmpp_sock_t *sock, unsigned int sequenceId, unsigned long long msgId,
+                 char *spcode, char *phone, char *content, int length, int msgfmt) {
     int err;
     size_t offset;
     cmpp_pack_t pack;
@@ -323,7 +331,7 @@ int cmpp_deliver(cmpp_sock_t *sock, unsigned int sequenceId, unsigned long long 
     cmpp_pack_add_integer(&pack, 0, &offset, 1);
     
     /* Msg_Fmt */
-    cmpp_pack_add_integer(&pack, msgFmt, &offset, 1);
+    cmpp_pack_add_integer(&pack, msgfmt, &offset, 1);
     
     /* Src_terminal_Id */
     cmpp_pack_add_string(&pack, phone, strlen(phone), &offset, 21);
@@ -384,8 +392,8 @@ int cmpp_deliver_resp(cmpp_sock_t *sock, unsigned int sequenceId, unsigned long 
 }
 
 
-int cmpp_report(cmpp_sock_t *sock, unsigned int sequenceId, unsigned long long msgId, char *destId, int stat, char *submitTime, char *doneTime,
-                char *destTerminalId, unsigned int smscSequence) {
+int cmpp_report(cmpp_sock_t *sock, unsigned int sequenceId, unsigned long long msgId, char *destId,
+                char *stat, char *submitTime, char *doneTime, char *destTerminalId, unsigned int smscSequence) {
 
     int err;
     cmpp_pack_t pack;
@@ -432,33 +440,7 @@ int cmpp_report(cmpp_sock_t *sock, unsigned int sequenceId, unsigned long long m
     cmpp_pack_add_integer(&pack, msgId, &offset, 8);
     
     /* Msg_Content -> Stat */
-    char *status = "UNKNOWN";
-
-    switch (stat) {
-        case 1:
-            status = "DELIVRD";
-            break;
-        case 2:
-            status = "EXPIRED";
-            break;
-        case 3:
-            status = "DELETED";
-            break;
-        case 4:
-            status = "UNDELIV";
-            break;
-        case 5:
-            status = "ACCEPTD";
-            break;
-        case 6:
-            status = "UNKNOWN";
-            break;
-        case 7:
-            status = "REJECTD";
-            break;
-    }
-
-    cmpp_pack_add_string(&pack, status, 7, &offset, 7);
+    cmpp_pack_add_string(&pack, stat, strlen(stat), &offset, 7);
     
     /* Msg_Content -> Submit_time */
     cmpp_pack_add_string(&pack, submitTime, 10, &offset, 10);

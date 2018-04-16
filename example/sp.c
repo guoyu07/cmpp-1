@@ -100,9 +100,12 @@ int main(int argc, char *argv[]) {
     /* Enterprise Number */
     char *spid = user;
 
+    /* Server Id */
+    char *serverid = "";
+
     /* Cmpp Send Message */
     sequenceId = cmpp_sequence();
-    err = cmpp_submit(&cmpp.sock, sequenceId, spid, spcode, phone, message, strlen(message), msgFmt, delivery);
+    err = cmpp_submit(&cmpp.sock, sequenceId, spid, spcode, phone, message, strlen(message), msgFmt, serverid, delivery);
     if (err) {
         fprintf(stderr, "cmpp cmpp_submit error\n");
         goto exit;
